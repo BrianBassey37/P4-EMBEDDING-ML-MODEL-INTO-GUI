@@ -1,25 +1,46 @@
 import streamlit as st
 import yaml
- 
-# Load YAML configuration
-try:
-    with open('config.yaml') as file:
-        config = yaml.safe_load(file)
-        print("Config loaded successfully:", config)  # Add this line to check if config is loaded correctly
-except FileNotFoundError:
-    st.error("Config file not found. Please make sure 'config.yaml' exists.")
-    st.stop()
-except yaml.YAMLError:
-    st.error("Error loading config file. Please check the format and content.")
-    st.stop()
- 
-# Define functions
-def layout_for_logged_in_users(username):
-    st.title(f'Welcome to the Dashboard, {username}')
-    # Add content for logged-in users here
- 
-    # Display Attrition Insight content
-    st.markdown("""
+
+
+with open('config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
+
+def save_config():
+    with open('config.yaml', 'w') as file:
+        yaml.dump(config, file)
+
+def authenticate(username, password):
+    if username in config['credentials']['usernames']:
+        stored_password = config['credentials']['usernames'][username]['password']
+        if password == stored_password:
+            return True
+    return False
+
+st.set_page_config(
+    page_title="Vodafone Dashboard",
+    page_icon=":chart_with_upwards_trend:",
+    layout="wide"  
+)
+
+st.markdown(
+    """
+    <style>
+    body {
+        background: linear-gradient(to bottom, #800000, #FFFFFF); /* Wine red to milk white gradient */
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+st.image('images\Vodafonelogo.jpg', use_column_width=True)
+st.markdown("""
     Attrition Insight is a Machine Learning application that predicts the likelihood of an employee to leave the company based on various demographic and job-related factors.
  
     **Key Features**
@@ -45,41 +66,33 @@ def layout_for_logged_in_users(username):
     - Seamless Integration: Integrate predictions into your workflow with a user-friendly interface.
     - Probability Estimates: Gain insights into the likelihood of predicted outcomes.
  
-    **Need Help?**
-    For collaborations contact me at samuel47dribsa@gmail.com.
     """)
-def authenticate(username, password):
-    if username in config['credentials']['usernames']:
-        stored_password = config['credentials']['usernames'][username]['password']
-        if password == stored_password:
-            return True
-    return False
- 
-# Initialize Streamlit
-st.set_page_config(page_title="Vodafone Dashboard", page_icon=":chart_with_upwards_trend:")
- 
-# Main content area
+
+def login():
+    st.title("Login")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    if st.button("Login"):
+        if authenticate(username, password):
+            st.session_state["name"] = username
+        else:
+            st.error("Invalid username or password. Please try again.")
+
+def create_account():
+    st.title("Create Account")
+    new_username = st.text_input("New Username")
+    new_password = st.text_input("New Password", type="password")
+    if st.button("Create Account"):
+        if new_username in config['credentials']['usernames']:
+            st.error("Username already exists. Please choose a different username.")
+        else:
+            config['credentials']['usernames'][new_username] = {'email': '', 'logged_in': False, 'name': new_username, 'password': new_password}
+            save_config()
+            st.success("Account created successfully. You can now log in.")
+
 if 'name' not in st.session_state:
-    with st.sidebar:
-        st.title("Login")
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        if st.button("Login"):
-            if authenticate(username, password):
-                st.session_state["name"] = username
-            else:
-                st.error("Invalid username or password. Please try again.")
+    login()
+    create_account()
 else:
-    with st.sidebar:
-        st.title("Logout")
-        if st.button("Logout"):
-            del st.session_state["name"]
- 
-# Main content area
-if 'name' in st.session_state:
-    layout_for_logged_in_users(st.session_state['name'])
-else:
-    st.success("Enter username and password to use the app.")
-    st.write("Test Accounts:")
-    for username in config['credentials']['usernames']:
-        st.write(f"Username: {username}, Password: {config['credentials']['usernames'][username]['password']}")
+    st.success(f"Welcome, {st.session_state['name']}!")
+    
