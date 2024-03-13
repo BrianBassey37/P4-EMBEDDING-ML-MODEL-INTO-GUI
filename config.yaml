@@ -10,8 +10,4 @@ credentials:
       logged_in: false
       name: Tirusew
       password: Chat@2024
-    brianbassey:
-      email: ''
-      logged_in: false
-      name: brianbassey
-      password: '123456789'
+
