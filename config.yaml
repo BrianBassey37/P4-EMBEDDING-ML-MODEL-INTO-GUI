@@ -1,13 +1,12 @@
 credentials:
   usernames:
-    Brian:
-      email: brian.bassey@Azubiafrica.org
+    ? ''
+    : email: ''
       logged_in: false
-      name: Brian
-      password: Password123
-    Tirusew:
+      name: ''
+      password: ''
+    Radon:
       email: tirusewcheru@gmail.com
       logged_in: false
-      name: Tirusew
-      password: Chat@2024
-
+      name: Radon
+      password: Azubi

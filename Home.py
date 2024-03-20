@@ -1,7 +1,7 @@
 import streamlit as st
 import yaml
 
-
+# Load config file
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
 
@@ -15,6 +15,13 @@ def authenticate(username, password):
         if password == stored_password:
             return True
     return False
+
+def create_account(username, password):
+    if username in config['credentials']['usernames']:
+        return False, "Username already exists. Please choose a different username."
+    config['credentials']['usernames'][username] = {'email': '', 'logged_in': False, 'name': username, 'password': password}
+    save_config()
+    return True, "Account created successfully. You can now log in."
 
 st.set_page_config(
     page_title="Vodafone Dashboard",
@@ -39,8 +46,46 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.image('images\Vodafonelogo.jpg', use_column_width=True)
-st.markdown("""
+
+# Check if the user is logged in
+if 'name' not in st.session_state:
+    st.sidebar.title("Login/Create Account")
+    username = st.sidebar.text_input("Username")
+    password = st.sidebar.text_input("Password", type="password")
+    if st.sidebar.button("Login"):
+        if authenticate(username, password):
+            st.session_state["name"] = username
+            st.sidebar.success("Login successful.")
+        else:
+            st.sidebar.error("Invalid username or password. Please try again.")
+    if st.sidebar.button("Create Account"):
+        st.sidebar.success("Please enter your details below to create an account.")
+        new_username = st.sidebar.text_input("New Username")
+        new_password = st.sidebar.text_input("New Password", type="password")
+        success, message = create_account(new_username, new_password)
+        if not success:
+            st.sidebar.error(message)
+        else:
+            st.sidebar.success(message)
+    else:
+        st.sidebar.title("Logout")
+        if st.sidebar.button("Logout"):
+            del st.session_state["name"]
+            st.sidebar.success("You have been successfully logged out.")
+
+        st.warning("You need to log in or create an account to access the data.")
+
+# Function to display image and sidebar
+def display_image_and_sidebar():
+    st.image('images\Vodafone_Albania-Logo.wine.png', use_column_width=True)
+
+    return st.sidebar.radio("Menu", ["About App"])
+
+# Main application logic
+menu_tab = display_image_and_sidebar()
+
+if menu_tab == "About App":
+    st.markdown("""
     Attrition Insight is a Machine Learning application that predicts the likelihood of an employee to leave the company based on various demographic and job-related factors.
  
     **Key Features**
@@ -50,10 +95,9 @@ st.markdown("""
     - History: See past predictions made.
  
     **User Benefits**
-    - Data-driven Decisions: Make informed decisions backed by data analytics.
-    - Easy Machine Learning: Utilize powerful machine learning algorithms effortlessly.
-    - Live Demo: Watch a demo video to see the app in action.
- 
+    - Data-driven Decisions.
+    - Utilize powerful machine learning algorithms effortlessly.
+                
     **How to run application**
     ```
     # activate virtual environment
@@ -63,36 +107,6 @@ st.markdown("""
  
     **Machine Learning Integration**
     - Model Selection: Choose between two advanced models for accurate predictions.
-    - Seamless Integration: Integrate predictions into your workflow with a user-friendly interface.
+    - Seamless Integration: Integrate predictions into  workflow with a user-friendly interface.
     - Probability Estimates: Gain insights into the likelihood of predicted outcomes.
- 
     """)
-
-def login():
-    st.title("Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    if st.button("Login"):
-        if authenticate(username, password):
-            st.session_state["name"] = username
-        else:
-            st.error("Invalid username or password. Please try again.")
-
-def create_account():
-    st.title("Create Account")
-    new_username = st.text_input("New Username")
-    new_password = st.text_input("New Password", type="password")
-    if st.button("Create Account"):
-        if new_username in config['credentials']['usernames']:
-            st.error("Username already exists. Please choose a different username.")
-        else:
-            config['credentials']['usernames'][new_username] = {'email': '', 'logged_in': False, 'name': new_username, 'password': new_password}
-            save_config()
-            st.success("Account created successfully. You can now log in.")
-
-if 'name' not in st.session_state:
-    login()
-    create_account()
-else:
-    st.success(f"Welcome, {st.session_state['name']}!")
-    
